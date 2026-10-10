@@ -1,2 +1,2 @@
-export * from './password';
-export * from './session';
+export * from './password.ts';
+export * from './session.ts';
