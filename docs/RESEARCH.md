@@ -1,25 +1,26 @@
 # Dokumen Riset Arsitektur: Depot Kang Galon (Next.js + Neon DB)
 
 ## 1. Analisis Kebutuhan
-Transformasi dari purwarupa CLI native Node.js ke aplikasi web profesional berstandar industri:
-- Manajemen pelanggan (CRM sederhana)
-- Manajemen langganan berulang (frekuensi & kuota galon)
-- Penjadwalan & tracking pengantaran kurir
-- Database serverless cloud: Neon Postgres
-- Framework: Next.js (App Router, Server Actions / Route Handlers, TypeScript)
+Ekspansi platform web operasional depot air minum:
+- **Autentikasi & RBAC (Role-Based Access Control)**:
+  - Role `OWNER` (Pemilik): Akses penuh ke dasbor analitik, manajemen pelanggan, manajemen paket langganan, dan semua pengantaran.
+  - Role `COURIER` (Pekerja/Kurir): Terkunci hanya ke portal tugas kurir (`/courier`), tanpa izin ubah data pelanggan atau paket.
+- **Mekanisme Auth Native & Aman**:
+  - Hashing password menggunakan `node:crypto` (`scrypt` native Node.js), nol dependensi bloat (tanpa butuh bcrypt C-bindings).
+  - Session berbasis HTTP-only Cookie terenkripsi / signed token (stateless session cookie via `jose` atau HMAC SHA-256 native).
+  - Route protection via Next.js Middleware (`src/middleware.ts`).
+- **Seeding Dummy Data**:
+  - Script seed terisolasi (`src/db/seed.ts`) yang mengisi akun owner, kurir, 10 data pelanggan realistis perumahan, langganan aktif, dan jadwal kirim bervariasi status (`PENDING`, `DELIVERING`, `DELIVERED`).
+- **Modernisasi UI/UX**:
+  - Desain modern bernuansa profesional (clean slate/indigo/sky palette, card layout, micro-interactions, mobile navigation khusus kurir).
+  - Header interaktif: profil akun, role badge, tombol logout.
 
 ## 2. Pilihan Stack Database & ORM
 - **Database**: Neon Serverless Postgres.
 - **Konektor / ORM**: Drizzle ORM + `@neondatabase/serverless`.
-  - Alasan: Ringan, zero-cold-start overhead, tipe data TypeScript aman (type-safe), migrasi SQL deklaratif tanpa bloat engine binary seperti Prisma.
-  - Alternatif: Native `@neondatabase/serverless` raw SQL. Drizzle dipilih untuk skalabilitas tim dan integritas skema.
+- **Tabel Tambahan**: Tabel `users` (`id`, `name`, `email`, `password_hash`, `role`, `created_at`).
 
-## 3. Komponen Arsitektur Next.js
-- **Routing**: Next.js App Router (`src/app/`).
-- **Data Mutation**: Server Actions dengan validasi runtime (`zod`).
-- **Styling**: Tailwind CSS + Shadcn UI primitives (Radix) untuk tampilan antarmuka kurir dan admin yang responsif di mobile.
-- **Testing**: Vitest + Playwright (E2E).
-
-## 4. Keamanan & Konfigurasi Lingkungan
-- Variabel koneksi DB `DATABASE_URL` wajib disimpan di `.env.local` (tidak dicommit).
-- Menggunakan pooling connection string dari Neon untuk efisiensi serverless function.
+## 3. Route Guard & Proteksi Hak Akses
+- `/login`: Terbuka untuk umum (unauthenticated).
+- `/courier`: Diizinkan untuk `OWNER` dan `COURIER`.
+- `/`, `/customers`, `/subscriptions`: Hanya diizinkan untuk `OWNER`. Jika kurir mengakses, otomatis diarahkan (redirect) ke `/courier`.
