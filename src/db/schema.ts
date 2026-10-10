@@ -1,8 +1,19 @@
 import { pgTable, uuid, varchar, text, timestamp, integer, date, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
+export const userRoleEnum = pgEnum('user_role', ['OWNER', 'COURIER']);
 export const subscriptionStatusEnum = pgEnum('subscription_status', ['ACTIVE', 'PAUSED', 'CANCELLED']);
 export const deliveryStatusEnum = pgEnum('delivery_status', ['PENDING', 'DELIVERING', 'DELIVERED', 'CANCELLED']);
+
+// Tabel Pengguna & Autentikasi
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  role: userRoleEnum('role').default('COURIER').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
 
 // Tabel Pelanggan
 export const customers = pgTable('customers', {

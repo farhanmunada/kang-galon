@@ -22,3 +22,8 @@ export const updateDeliveryStatusSchema = z.object({
   deliveryId: z.string().uuid('ID Pengantaran tidak valid'),
   nextStatus: z.enum(['PENDING', 'DELIVERING', 'DELIVERED', 'CANCELLED']),
 });
+
+export const loginSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+  password: z.string().min(1, 'Kata sandi wajib diisi'),
+});

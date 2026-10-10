@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test test/domain.test.ts",
+    "test": "node --experimental-strip-types --test test/domain.test.ts test/auth.test.ts",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
+    "db:seed": "node --experimental-strip-types src/db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
